@@ -4,7 +4,7 @@ import { Model } from 'survey-core';
 import { startGame, getNextPrompt } from './game/scene';
 import 'survey-core/defaultV2.min.css';
 
-const API_BASE = "http://localhost:3001";
+const API_BASE = "https://ec2-13-59-117-1.us-east-2.compute.amazonaws.com";
 
 const AppState = {
     start: 0,
@@ -130,7 +130,7 @@ function App() {
             direction: command.direction,
             error: command.error
         }
-        fetch(API_BASE + "/message", {method: 'POST', mode: 'cors', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(data)})
+        fetch(API_BASE + "/message", {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(data)})
             .then(res => res.json())
             .then(data => console.log(data))
             .catch(err => console.error("Error: ", err));
@@ -138,7 +138,7 @@ function App() {
 
     const PostSurvey = (data) => {
         const new_data = {...data, user_id: user};
-        fetch(API_BASE + "/survey", {method: 'POST', mode: 'cors', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(new_data)})
+        fetch(API_BASE + "/survey", {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(new_data)})
             .then(res => res.json())
             .then(data => console.log(data))
             .catch(err => console.error("Error: ", err));
