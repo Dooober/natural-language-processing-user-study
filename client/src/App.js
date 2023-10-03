@@ -1,10 +1,10 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import { Survey } from 'survey-react-ui';
 import { Model } from 'survey-core';
 import { startGame, getNextPrompt } from './game/scene';
 import 'survey-core/defaultV2.min.css';
 
-const API_BASE = "https://ec2-13-59-117-1.us-east-2.compute.amazonaws.com";
+const API_BASE = 'http://15.204.232.175:3001';
 
 const AppState = {
     start: 0,
@@ -32,7 +32,7 @@ const surveyModel = {
         title: "How was your overall experience with the adventure?",
         type: "radiogroup",
         choices: [
-            { value: 1, text: "Aweful" },
+            { value: 1, text: "Awful" },
             { value: 2, text: "Bad" },
             { value: 3, text: "Neutral" },
             { value: 4, text: "Good" },
@@ -76,7 +76,7 @@ const surveyModel = {
 function App() {
     const [appState, setAppState] = useState(AppState.start);
 
-    const [user, setUser] = useState(0);
+    const [user, setUser] = useState("");
 
     // GameState
     const [gameState, setGameState] = useState({
@@ -98,9 +98,8 @@ function App() {
     });
 
     const [input, setInput] = useState("");
+    const [error, setError] = useState("");
     const [prompt, setPrompt] = useState("test");
-
-    //const [surveyActive, setSurveyActive] = useState(false);
 
     useEffect(() => {
 
@@ -115,7 +114,7 @@ function App() {
                 setUser(data.user_id);
                 const state = startGame(data.parser);
                 setGameState(state);
-                setPrompt(state.message);
+                setPrompt(state.prompt);
                 setAppState(AppState.game);
             })
             .catch(err => console.error("Error: ", err));
@@ -132,15 +131,22 @@ function App() {
         }
         fetch(API_BASE + "/message", {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(data)})
             .then(res => res.json())
-            .then(data => console.log(data))
             .catch(err => console.error("Error: ", err));
     }
 
-    const PostSurvey = (data) => {
-        const new_data = {...data, user_id: user};
+    const PostSurvey = (results) => {
+        const new_data = {
+            user_id: user,
+            background: results.background,
+            experience: results.experience,
+            error: results.error,
+            why: results.why,
+            features: results.features,
+            optional: results.optional
+        };
+        console.log(new_data);
         fetch(API_BASE + "/survey", {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(new_data)})
             .then(res => res.json())
-            .then(data => console.log(data))
             .catch(err => console.error("Error: ", err));
     }
 
@@ -154,7 +160,8 @@ function App() {
         setGameState(output[1]);
         PostMessage(output[0]);
         
-        setPrompt(output[1].message);
+        setPrompt(output[1].prompt);
+        setError(output[1].error);
         if (gameState.finished) {
             setAppState(AppState.survey);
         }
@@ -163,10 +170,10 @@ function App() {
     }
 
     const survey = new Model(surveyModel);
-    const surveyComplete = useCallback((sender) => {
+    const surveyComplete = (sender) => {
         setAppState(AppState.done);
         PostSurvey(sender.data);
-    }, []);
+    };
     survey.onComplete.add(surveyComplete)
     
     switch (appState) {
@@ -174,6 +181,7 @@ function App() {
             return (            
                 <div className="App">
                     <div className='Game'>
+                        <h1>{error}</h1>
                         <h1>{prompt}</h1>
                         <form onSubmit={handleSubmit}>
                             <input type="text" onChange={(e) => setInput(e.target.value)} required></input>
@@ -186,6 +194,7 @@ function App() {
             return (
                 <div className="App">
                     <div className='Button'>
+                        <h1>This user study consists of playing a text-adventure and completing a short survey about your experience. Once you click start, you will begin the adventure. Only some commands are valid, and you may or may not receive error messages.</h1>
                         <input type="submit" value="Start" onClick={onStart}></input>
                     </div>
                 </div>

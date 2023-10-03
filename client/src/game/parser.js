@@ -34,6 +34,7 @@ const DirectionWords = {
     "rock": Direction.cliff,
     "rocks": Direction.cliff,
     "up": Direction.cliff,
+    "down": Direction.cliff
 
 }
 
@@ -67,11 +68,12 @@ const VerbWords = {
 }
 
 export const Error = {
-    none: -1,
-    multiple_directions: "Cannot have multiple directions.\n",
-    multiple_verbs: "Cannot have multiple verbs.\n",
-    cannot_understand: "Command not understood, please try again.\n",
-    wrong_direction: "You cannot go that direction, please try again.\n"
+    none: "",
+    multiple_directions: "Cannot have multiple directions.",
+    multiple_verbs: "Cannot have multiple verbs.",
+    must_have_direction: "Command must choose a direction, where would you like to go?",
+    nothing_parsed: "Command not understood, please use keywords such as \"go left\" or \"walk straight\".",
+    wrong_direction: "You cannot go that direction."
 }
 
 export function parse(s) {
@@ -90,7 +92,6 @@ export function parse(s) {
                 command.error = Error.multiple_directions;
                 return command;
             } else {
-
                 command.direction = DirectionWords[word];
             }
         } else if (word in VerbWords) {
@@ -102,9 +103,12 @@ export function parse(s) {
             }
         }
     })
-
-    if (command.verb === Verb.none || (command.direction === Direction.none && command.verb === Verb.go)) {
-        command.error = Error.cannot_understand;
+    if (command.verb === Verb.none && command.direction !== Direction.none) {
+        command.verb = Verb.go; 
+    } else if (command.direction === Direction.none && command.verb === Verb.go) {
+        command.error = Error.must_have_direction;
+    } else if (command.direction === Direction.none && command.verb === Verb.none) {
+        command.error = Error.nothing_parsed;
     }
     return command;
 }

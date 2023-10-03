@@ -487,7 +487,7 @@ export function startGame(parser) {
         cliff: Location.none,
         
         prompt: LocationMessages.start,
-        message: LocationMessages.start,
+        error: "",
         messageCount: 0,
         finished: false,
     }
@@ -505,9 +505,10 @@ function performMove(state, direction) {
 function getNextState(state, command) {
     if (command.error !== Error.none) { // Error when parsing, need exactly one location and verb
         if (state.parser === 2) {
-            state.message = command.error + state.prompt;
+            state.error = command.error;
         }
     } else {
+        state.error = Error.none;
         switch (command.verb) {
             case Verb.go:
                 if (nextLocation(state, command.direction) === Location.none) {
@@ -544,6 +545,7 @@ function getNextState(state, command) {
                 break;
         }
     }
+    state.messageCount += 1;
     return state;
 }
 
